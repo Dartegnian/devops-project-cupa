@@ -127,3 +127,80 @@ resource "aws_db_subnet_group" "cupa" {
     Name = "cupa-db-subnet-group"
   }
 }
+
+# Load Balancer
+resource "aws_lb" "cupa" {
+  name = "cupa-lb"
+  internal = false
+  load_balancer_type = "application"
+  security_groups = [aws_security_group.ec2.id]
+  subnets = [aws_subnet.public.id]
+
+  tags = {
+    Name = "cupa-load-balancer"
+  }
+}
+
+resource "aws_lb_listener" "http" {
+  load_balancer_arn = aws_lb.cupa.arn
+  port = 80
+  protocol = "HTTP"
+  default_action {
+    type = "forward"
+    target_group_arn = aws_lb_target_group.cupa.arn
+  }
+}
+
+resource "aws_lb_target_group" "cupa" {
+  name = "cupa-target-group"
+  port = 80
+  protocol = "HTTP"
+  vpc_id = aws_vpc.cupa.id
+  target_type = "instance"
+}
+
+resource "aws_lb_target_group_attachment" "cupa" {
+  target_group_arn = aws_lb_target_group.cupa.arn
+  target_id = aws_instance.web.id
+  port = 80
+}
+
+# CloudFront
+resource "aws_cloudfront_distribution" "cupa" {
+  origin {
+    domain_name = aws_lb.cupa.dns_name
+    origin_id = "cupa-lb"
+  }
+
+  enabled = true
+  default_root_object = "index.html"
+
+  default_cache_behavior {
+    allowed_methods = ["GET", "HEAD"]
+    cached_methods = ["GET", "HEAD"]
+    target_origin_id = "cupa-lb"
+
+    forwarded_values {
+      query_string = false
+      cookies {
+        forward = "none"
+      }
+    }
+
+    viewer_protocol_policy = "redirect-to-https"
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  tags = {
+    Name = "cupa-cloudfront"
+  }
+}
