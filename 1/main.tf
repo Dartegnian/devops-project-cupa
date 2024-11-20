@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 # VPC
-resource "aws_vpc" "main" {
+resource "aws_vpc" "cupa" {
   cidr_block = "10.0.0.0/16"
   enable_dns_support = true
   enable_dns_hostnames = true
@@ -13,7 +13,7 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_subnet" "public" {
-  vpc_id = aws_vpc.main.id
+  vpc_id = aws_vpc.cupa.id
   cidr_block = "10.0.1.0/24"
   map_public_ip_on_launch = true
   availability_zone = "us-east-1a"
@@ -23,7 +23,7 @@ resource "aws_subnet" "public" {
 }
 
 resource "aws_subnet" "private" {
-  vpc_id = aws_vpc.main.id
+  vpc_id = aws_vpc.cupa.id
   cidr_block = "10.0.2.0/24"
   availability_zone = "us-east-1a"
   tags = {
@@ -32,8 +32,8 @@ resource "aws_subnet" "private" {
 }
 
 # Internet Gateway
-resource "aws_internet_gateway" "main" {
-  vpc_id = aws_vpc.main.id
+resource "aws_internet_gateway" "cupa" {
+  vpc_id = aws_vpc.cupa.id
   tags = {
     Name = "cupa-igw"
   }
@@ -41,10 +41,10 @@ resource "aws_internet_gateway" "main" {
 
 # Route Table
 resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.main.id
+  vpc_id = aws_vpc.cupa.id
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.main.id
+    gateway_id = aws_internet_gateway.cupa.id
   }
   tags = {
     Name = "public-route-table"
@@ -59,7 +59,7 @@ resource "aws_route_table_association" "public" {
 
 # Security Group
 resource "aws_security_group" "ec2" {
-  vpc_id = aws_vpc.main.id
+  vpc_id = aws_vpc.cupa.id
   ingress {
     from_port = 22
     to_port = 22
@@ -95,5 +95,35 @@ resource "aws_instance" "web" {
   ]
   tags = {
     Name = "web-cupa-instance"
+  }
+}
+
+# RDS instance
+resource "aws_db_instance" "database" {
+  allocated_storage = 20
+  storage_type = "gp2"
+  engine = "mysql"
+  engine_version = "8.0"
+  instance_class = "db.t2.micro"
+  username = "admin"
+  password = "password123"
+  publicly_accessible = false
+  skip_final_snapshot = true
+  vpc_security_group_ids = [
+    aws_security_group.ec2.id
+  ]
+  db_subnet_group_name = aws_db_subnet_group.cupa.name
+  tags = {
+    Name = "cupa-database"
+  }
+}
+
+# Subnet Group for RDS
+resource "aws_db_subnet_group" "cupa" {
+  name = "cupa-db-subnet-group"
+  subnet_ids = [aws_subnet.private.id]
+
+  tags = {
+    Name = "cupa-db-subnet-group"
   }
 }
