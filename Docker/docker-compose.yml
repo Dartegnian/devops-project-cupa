@@ -19,3 +19,8 @@ services:
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
 
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    ports:
+      - "9100:9100"
