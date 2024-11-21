@@ -67,3 +67,24 @@ jobs:
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           path: Terraform/cleaned_plan.txt
+
+  terraform-apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    needs:
+      - terraform-validate
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.9.8
+
+      - name: Change to Terraform Directory
+        run: cd Terraform
+
+      #- name: Apply Terraform
+      #  run: NO WAY AM I APPLYING THIS I MIGHT LOSE MONEY!!!!!!!!!!!!!!!!!!!!!!!1
