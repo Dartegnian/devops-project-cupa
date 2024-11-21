@@ -1,0 +1,27 @@
+---
+- name: Install Node Exporter
+  hosts: servers
+  become: yes
+  tasks:
+    - name: Download Node Exporter, save to tmp
+      ansible.builtin.get_url:
+        url: https://github.com/prometheus/node_exporter/releases/download/v1.8.2/node_exporter-1.8.2.linux-amd64.tar.gz
+        dest: /tmp/node_exporter.tar.gz
+
+    - name: Extract from tmp to /usr/local/bin
+      ansible.builtin.unarchive:
+        src: /tmp/node_exporter.tar.gz
+        dest: /usr/local/bin/
+        remote_src: yes
+
+    - name: Move the binary from folder to bin
+      ansible.builtin.command:
+        cmd: mv /usr/local/bin/node_exporter-1.8.2.linux-amd64/node_exporter /usr/local/bin/
+
+    - name: Delete extracted folder
+      ansible.builtin.file:
+        path: /usr/local/bin/node_exporter-1.8.2.linux-amd64
+        state: absent
+
+    - name: Start Node Exporter
+      shell: nohup /usr/local/bin/node_exporter > /dev/null 2>&1 &

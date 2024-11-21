@@ -1,0 +1,26 @@
+services:
+  cupa-ansible-server-1:
+    image: ubuntu:latest
+    container_name: cupa-ansible-server-1
+    restart: unless-stopped
+    command: /usr/sbin/sshd -D
+    ports:
+      - "2222:22"
+    environment:
+      - ROOT_PASSWORD=root
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+  cupa-ansible-server-2:
+    image: ubuntu:latest
+    container_name: cupa-ansible-server-2
+    restart: unless-stopped
+    command: /usr/sbin/sshd -D
+    ports:
+      - "2223:22"
+    environment:
+      - ROOT_PASSWORD=root
+    build:
+      context: .
+      dockerfile: Dockerfile
