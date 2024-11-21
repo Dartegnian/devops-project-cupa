@@ -1,0 +1,27 @@
+name: Terraform Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  terraform-validate:
+    name: Validate Terraform Configuration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.9.8
+
+      - name: Initialize Terraform
+        run: terraform init
+        working-directory: Terraform
+
+      - name: Validate Terraform
+        run: terraform validate
+        working-directory: Terraform
