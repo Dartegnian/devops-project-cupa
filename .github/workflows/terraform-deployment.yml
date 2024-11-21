@@ -33,6 +33,8 @@ jobs:
     name: Terraform Plan
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
+    needs:
+      - terraform-validate
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -45,3 +47,44 @@ jobs:
       - name: Initialize Terraform
         run: terraform init
         working-directory: Terraform
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+        working-directory: Terraform
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Show Terraform Plan
+        run: terraform show -no-color tfplan > plan.txt
+        working-directory: Terraform
+
+      - name: Clean Terraform Plan Output
+        run: sed 's/%0A/\n/g' plan.txt > cleaned_plan.txt
+        working-directory: Terraform
+  
+      - name: Comment on PR
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          path: Terraform/cleaned_plan.txt
+
+  terraform-apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    needs:
+      - terraform-validate
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.9.8
+
+      - name: Change to Terraform Directory
+        run: cd Terraform
+
+      #- name: Apply Terraform
+      #  run: NO WAY AM I APPLYING THIS I MIGHT LOSE MONEY!!!!!!!!!!!!!!!!!!!!!!!1
