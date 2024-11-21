@@ -54,3 +54,12 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Show Terraform Plan
+        run: terraform show -no-color tfplan > plan.txt
+        working-directory: Terraform
+  
+      - name: Comment on PR
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          path: Terraform/plan.txt
