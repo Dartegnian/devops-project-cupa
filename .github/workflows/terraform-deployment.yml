@@ -58,8 +58,12 @@ jobs:
       - name: Show Terraform Plan
         run: terraform show -no-color tfplan > plan.txt
         working-directory: Terraform
+
+      - name: Clean Terraform Plan Output
+        run: sed 's/%0A/\n/g' plan.txt > cleaned_plan.txt
+        working-directory: Terraform
   
       - name: Comment on PR
         uses: marocchino/sticky-pull-request-comment@v2
         with:
-          path: Terraform/plan.txt
+          path: Terraform/cleaned_plan.txt
